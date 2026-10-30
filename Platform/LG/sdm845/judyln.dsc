@@ -30,6 +30,3 @@
   gRenegadePkgTokenSpaceGuid.PcdDeviceVendor|"LG"
   gRenegadePkgTokenSpaceGuid.PcdDeviceProduct|"G7 ThinQ"
   gRenegadePkgTokenSpaceGuid.PcdDeviceCodeName|"Judyln"
-
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSecureBootEnable|FALSE
-  gQcomTokenSpaceGuid.PcdXhciEnableHotPlug|FALSE
