@@ -20,21 +20,20 @@ jobs:
       - name: 安装编译依赖
         run: |
           sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext patch
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 应用USB TPL修复补丁（patch命令，兼容edk2子模块）
+      - name: 编译 G710N judyln UEFI（DEBUG + USB，不开启热插拔）
         run: |
-          patch -p1 -d edk2 < patches/usb-tpl-fix.patch || echo "⚠️ 补丁匹配失败，跳过"
+          set -e
+          ./build.sh --device judyln -r DEBUG -u
 
-      - name: 编译 G710N judyln UEFI（DEBUG + USB + USB_HOTPLUG宏开启热插拔）
+      - name: 查找镜像
         run: |
-          ./build.sh --device judyln -r DEBUG -u -D USB_HOTPLUG=1
-
-      - name: 查找镜像位置（调试）
-        run: find . -name "boot-judyln.img"
+          ls -la ./output/
+          find . -name "boot-judyln.img"
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: G710N-judyln-uefi
-          path: ./Build/judyln/DEBUG/FV/boot-judyln.img
+          path: ./output/boot-judyln.img
