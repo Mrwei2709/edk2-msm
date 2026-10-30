@@ -1,4 +1,5 @@
-name: Build judyln LG G710N
+name: Build judyln LG G710N (Fixed)
+
 on:
   push:
     branches: [ master ]
@@ -10,31 +11,53 @@ jobs:
     strategy:
       matrix:
         device: [judyln]
+
     steps:
-      - name: 拉取源码+子模块
+      # 1. 拉取源码
+      - name: Checkout Source Code
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           fetch-depth: 0
 
-      - name: 安装编译依赖 + 全套LLVM14工具链软链接
+      # 2. 安装依赖 (增加了 mtools 和 dosfstools 用于检查镜像)
+      - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang-14 llvm-14 device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
-          sudo ln -sf clang-14 /usr/bin/clang
-          sudo ln -sf clang++-14 /usr/bin/clang++
-          sudo ln -sf llvm-ar-14 /usr/bin/llvm-ar
-          sudo ln -sf llvm-objcopy-14 /usr/bin/llvm-objcopy
-          sudo ln -sf llvm-nm-14 /usr/bin/llvm-nm
-          sudo ln -sf llvm-ranlib-14 /usr/bin/llvm-ranlib
-          sudo ln -sf llvm-strip-14 /usr/bin/llvm-strip
+          sudo apt install -y build-essential python3 python3-setuptools \
+            gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev \
+            nasm acpica-tools libglib2.0-dev gettext mtools dosfstools
 
-      - name: 编译 G710N judyln UEFI（DEBUG、移除USB串口、保留OTG USB键盘）
+      # 3. 清理环境 (关键：防止旧缓存导致内存地址错乱)
+      - name: Clean Build Environment
         run: |
-          ./build.sh --device judyln -r DEBUG
+          if [ -f ./build.sh ]; then
+            ./build.sh --device ${{ matrix.device }} clean || true
+          fi
+          rm -rf ./Build ./Conf
 
-      - name: 上传产物
+      # 4. 编译 UEFI
+      # 修改说明：移除 -u (USB Serial)，保留 DEBUG (含USB键盘驱动)
+      - name: Build UEFI Firmware
+        run: |
+          echo "Starting build for ${{ matrix.device }}..."
+          ./build.sh --device ${{ matrix.device }} -r DEBUG
+          
+          # 保存构建日志，这对排查 "Synchronous Exception" 至关重要
+          cp ./Build/Logs/*.log ./build.log || true
+
+      # 5. 验证产物 (可选)
+      - name: Verify Output
+        run: |
+          ls -lh ./boot-${{ matrix.device }}.img
+          file ./boot-${{ matrix.device }}.img
+
+      # 6. 上传所有相关产物
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi-no-usbserial
-          path: ./boot-judyln.img
+          name: G710N-judyln-uefi-debug
+          path: |
+            ./boot-${{ matrix.device }}.img
+            ./build.log
+            ./Build/${{ matrix.device }}/DEBUG_FV/
