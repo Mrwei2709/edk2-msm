@@ -31,6 +31,4 @@
   gRenegadePkgTokenSpaceGuid.PcdDeviceProduct|"G7 ThinQ"
   gRenegadePkgTokenSpaceGuid.PcdDeviceCodeName|"Judyln"
 
-  # USB Hotplug（新增）
-  gUsbBusDxeTokenSpaceGuid.PcdUsbHotPlugEnable|TRUE
-  gUsbBusDxeTokenSpaceGuid.PcdPollingInterval|200000
+
