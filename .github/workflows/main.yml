@@ -21,9 +21,9 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
+      - name: 编译 G710N judyln UEFI（Release正式版）
         run: |
-          ./build.sh --device judyln -r DEBUG -u
+          ./build.sh --device judyln
 
       - name: 查找固件文件
         run: |
