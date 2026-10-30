@@ -1,4 +1,4 @@
-name: Build judyln LG G710N (Fixed)
+name: Build judyln LG G710N (No Crash Fix)
 
 on:
   push:
@@ -28,36 +28,32 @@ jobs:
             gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev \
             nasm acpica-tools libglib2.0-dev gettext mtools dosfstools
 
-      # 3. 清理环境 (关键：防止旧缓存导致内存地址错乱)
-      - name: Clean Build Environment
-        run: |
-          if [ -f ./build.sh ]; then
-            ./build.sh --device ${{ matrix.device }} clean || true
-          fi
-          rm -rf ./Build ./Conf
-
-      # 4. 编译 UEFI
-      # 修改说明：移除 -u (USB Serial)，保留 DEBUG (含USB键盘驱动)
+      # 3. 编译 UEFI (关键修改点)
       - name: Build UEFI Firmware
         run: |
-          echo "Starting build for ${{ matrix.device }}..."
-          ./build.sh --device ${{ matrix.device }} -r DEBUG
+          echo "Cleaning build environment..."
+          # 清理旧文件，防止缓存导致的内存地址错误
+          make clean || true 
           
-          # 保存构建日志，这对排查 "Synchronous Exception" 至关重要
-          cp ./Build/Logs/*.log ./build.log || true
+          echo "Building for judyln with DEBUG mode (Keyboard support)..."
+          # 移除 -u 参数以避免 USB 串口冲突
+          # 保留 DEBUG 以支持 USB 键盘
+          ./build.sh --device judyln -r DEBUG
 
-      # 5. 验证产物 (可选)
-      - name: Verify Output
+      # 4. 检查产物 (可选，确保生成了有效镜像)
+      - name: Check Artifact
         run: |
-          ls -lh ./boot-${{ matrix.device }}.img
-          file ./boot-${{ matrix.device }}.img
+          if [ -f "./boot-judyln.img" ]; then
+            echo "Image generated successfully."
+            file ./boot-judyln.img
+          else
+            echo "Error: boot-judyln.img not found!"
+            exit 1
+          fi
 
-      # 6. 上传所有相关产物
-      - name: Upload Artifacts
+      # 5. 上传产物
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi-debug
-          path: |
-            ./boot-${{ matrix.device }}.img
-            ./build.log
-            ./Build/${{ matrix.device }}/DEBUG_FV/
+          name: G710N-judyln-uefi-fixed
+          path: ./boot-judyln.img
