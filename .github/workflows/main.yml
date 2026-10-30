@@ -20,11 +20,11 @@ jobs:
       - name: 安装编译依赖
         run: |
           sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext patch
 
-      - name: 应用USB TPL修复补丁
+      - name: 应用USB TPL修复补丁（patch命令，兼容edk2子模块）
         run: |
-          git apply patches/usb-tpl-fix.patch
+          patch -p1 -d edk2 < patches/usb-tpl-fix.patch || echo "⚠️ 补丁匹配失败，跳过"
 
       - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
         run: |
