@@ -20,14 +20,17 @@ jobs:
       - name: 安装编译依赖
         run: |
           sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang-14 llvm-14 device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
+          sudo ln -sf clang-14 /usr/bin/clang
+          sudo ln -sf llvm-objcopy-14 /usr/bin/llvm-objcopy
 
-      - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
+      - name: 编译 G710N judyln UEFI（DEBUG、移除USB串口、保留OTG USB键盘）
         run: |
-          ./build.sh --device judyln -r DEBUG -u
+          # 重点：移除 -u，不再加载USB CDC串口控制台
+          ./build.sh --device judyln -r DEBUG
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi
+          name: G710N-judyln-uefi-no-usbserial
           path: ./boot-judyln.img
