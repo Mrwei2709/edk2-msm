@@ -1,0 +1,31 @@
+diff --git a/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c b/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
+index a7f2b40888..5823929041 100644
+--- a/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
++++ b/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
+@@ -1744,14 +1744,6 @@ UsbHotPlugCallback (
+   USB_BUS_DEV                 *BusDev;
+   UINTN                       Index;
+   
+-  //
+-  // Raise TPL to TPL_CALLBACK
+-  //
+-  OldTpl = RaiseTPL (TPL_CALLBACK);
+-  if (OldTpl < TPL_CALLBACK) {
+-    return EFI_SUCCESS;
+-  }
+-
+   //
+   // Iterate all USB bus devices to check hot plug event
+   //
+@@ -1785,10 +1777,6 @@ UsbHotPlugCallback (
+     }
+   }
+ 
+-  //
+-  // Restore TPL
+-  //
+-  RestoreTPL (OldTpl);
+   return EFI_SUCCESS;
+ }
+ 
+ /**
