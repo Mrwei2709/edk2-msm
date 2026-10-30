@@ -1,5 +1,4 @@
-name: Build judyln LG G710N (No Crash Fix)
-
+name: Build judyln LG G710N
 on:
   push:
     branches: [ master ]
@@ -11,49 +10,20 @@ jobs:
     strategy:
       matrix:
         device: [judyln]
-
     steps:
-      # 1. 拉取源码
-      - name: Checkout Source Code
+      - name: 拉取源码+子模块
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           fetch-depth: 0
 
-      # 2. 安装依赖 (增加了 mtools 和 dosfstools 用于检查镜像)
-      - name: Install Dependencies
+      - name: 安装编译依赖
         run: |
           sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools \
-            gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev \
-            nasm acpica-tools libglib2.0-dev gettext mtools dosfstools
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      # 3. 编译 UEFI (关键修改点)
-      - name: Build UEFI Firmware
-        run: |
-          echo "Cleaning build environment..."
-          # 清理旧文件，防止缓存导致的内存地址错误
-          make clean || true 
-          
-          echo "Building for judyln with DEBUG mode (Keyboard support)..."
-          # 移除 -u 参数以避免 USB 串口冲突
-          # 保留 DEBUG 以支持 USB 键盘
-          ./build.sh --device judyln -r DEBUG
-
-      # 4. 检查产物 (可选，确保生成了有效镜像)
-      - name: Check Artifact
-        run: |
-          if [ -f "./boot-judyln.img" ]; then
-            echo "Image generated successfully."
-            file ./boot-judyln.img
-          else
-            echo "Error: boot-judyln.img not found!"
-            exit 1
-          fi
-
-      # 5. 上传产物
-      - name: Upload Artifact
+      - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi-fixed
+          name: G710N-judyln-uefi
           path: ./boot-judyln.img
