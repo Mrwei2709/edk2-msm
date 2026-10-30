@@ -26,9 +26,9 @@ jobs:
         run: |
           patch -p1 -d edk2 < patches/usb-tpl-fix.patch || echo "⚠️ 补丁匹配失败，跳过"
 
-      - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
+      - name: 编译 G710N judyln UEFI（DEBUG + USB + USB_HOTPLUG宏开启热插拔）
         run: |
-          ./build.sh --device judyln -r DEBUG -u
+          ./build.sh --device judyln -r DEBUG -u -D USB_HOTPLUG=1
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
