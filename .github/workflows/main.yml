@@ -3,6 +3,7 @@ on:
   push:
     branches: [ master ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,16 +22,16 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 编译 G710N judyln UEFI（Release正式版）
+      - name: 应用USB TPL修复补丁
         run: |
-          ./build.sh --device judyln
+          git apply patches/usb-tpl-fix.patch
 
-      - name: 查找固件文件
+      - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
         run: |
-          find . -type f \( -name "*.img" -o -name "*.fd" \)
+          ./build.sh --device judyln -r DEBUG -u
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: G710N-judyln-uefi
-          path: ./**/*.img
+          path: ./boot-judyln.img
