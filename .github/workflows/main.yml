@@ -17,16 +17,20 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      - name: 安装编译依赖
+      - name: 安装编译依赖 + 全套LLVM14工具链软链接
         run: |
           sudo apt update
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang-14 llvm-14 device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
           sudo ln -sf clang-14 /usr/bin/clang
+          sudo ln -sf clang++-14 /usr/bin/clang++
+          sudo ln -sf llvm-ar-14 /usr/bin/llvm-ar
           sudo ln -sf llvm-objcopy-14 /usr/bin/llvm-objcopy
+          sudo ln -sf llvm-nm-14 /usr/bin/llvm-nm
+          sudo ln -sf llvm-ranlib-14 /usr/bin/llvm-ranlib
+          sudo ln -sf llvm-strip-14 /usr/bin/llvm-strip
 
       - name: 编译 G710N judyln UEFI（DEBUG、移除USB串口、保留OTG USB键盘）
         run: |
-          # 重点：移除 -u，不再加载USB CDC串口控制台
           ./build.sh --device judyln -r DEBUG
 
       - name: 上传产物
