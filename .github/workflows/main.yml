@@ -1,0 +1,17 @@
+name: Test apply TPL patch
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Apply patch
+        run: |
+          patch -p1 --dry-run < patches/usbhub_enum_tpl.patch
