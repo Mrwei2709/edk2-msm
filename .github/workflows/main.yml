@@ -1,9 +1,9 @@
-name: Inspect UsbBusDxe
+name: Dump UsbHubEnumeration context
 on:
   workflow_dispatch:
 
 jobs:
-  inspect:
+  dump:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -12,14 +12,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Inspect UsbBusDxe directory and symbols
+      - name: Extract UsbHub.c around line 663
         run: |
           DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
-          echo "=== dir listing ==="
-          ls -la "$DIR"
-          echo "=== UsbHubEnumeration in UsbHub.c ==="
-          grep -n "UsbHubEnumeration" "$DIR/UsbHub.c" || echo "(not in UsbHub.c)"
-          echo "=== timer/hotplug related in whole dir ==="
-          grep -rn -i -E "hotplug|UsbBusTimer|TimerHandler|CreateEvent" "$DIR" || echo "(none)"
-          echo "=== edk2 submodule commit ==="
-          cd Common/edk2 && git log -1 --format="%H %s" 2>/dev/null || echo "(no git info)"
+          sed -n '650,680p' "$DIR/UsbHub.c"
