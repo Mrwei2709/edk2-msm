@@ -1,0 +1,31 @@
+--- a/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
++++ b/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
+@@ -1,5 +1,5 @@
+ VOID UsbHotPlugCallback (IN EFI_EVENT Event, IN VOID *Context)
+ {
+-  USB_BUS         *Bus;
+-
+-  Bus = Context;
+-  UsbHubEnumeration (Bus);
++  EFI_TPL         OldTpl;
++  EFI_TPL         CurrTpl;
++  USB_BUS         *Bus;
++
++  Bus = Context;
++
++  CurrTpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);
++  gBS->RestoreTPL (CurrTpl);
++
++  OldTpl = CurrTpl;
++  if (CurrTpl < TPL_CALLBACK) {
++    OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
++  }
++
++  if (Bus->Controller != NULL) {
++    UsbHubEnumeration (Bus);
++  }
++
++  if (OldTpl != CurrTpl) {
++    gBS->RestoreTPL (OldTpl);
++  }
+ }
