@@ -1,4 +1,4 @@
-name: Dump UsbHubEnumeration context
+name: Dump UsbHubEnumeration func start
 on:
   workflow_dispatch:
 
@@ -12,7 +12,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Extract UsbHub.c around line 663
+      - name: Find UsbHubEnumeration and print first 40 lines
         run: |
           DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
-          sed -n '650,680p' "$DIR/UsbHub.c"
+          grep -n -A40 "UsbHubEnumeration" "$DIR/UsbHub.c"
