@@ -1,41 +1,23 @@
-name: Build judyln LG G710N
+name: Dump UsbEnumeratePort TPL usage
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  dump:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        device: [judyln]
     steps:
-      - name: 拉取源码+子模块
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: recursive
           fetch-depth: 0
 
-      - name: 安装编译依赖
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
-
-      - name: 修补 UsbHubEnumeration TPL 保护
+      - name: Find and dump UsbEnumeratePort
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          sed -i '1016a\  EFI_TPL           OldTpl;' "$FILE"
-          sed -i '1022a\  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);' "$FILE"
-          sed -i '1036i\    gBS->RestoreTPL (OldTpl);' "$FILE"
-          sed -i '1055a\  gBS->RestoreTPL (OldTpl);' "$FILE"
-
-      - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
-        run: |
-          ./build.sh --device judyln -r DEBUG -u
-
-      - name: 上传产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: G710N-judyln-uefi-tplfix
-          path: ./boot-judyln.img
+          grep -n "UsbEnumeratePort (" "$FILE"
+          echo "=== first 60 lines ==="
+          START=$(grep -n "UsbEnumeratePort (" "$FILE" | head -n1 | cut -d: -f1)
+          sed -n "${START},+60p" "$FILE"
+          echo "=== all TPL/RaiseTPL in UsbEnumer.c ==="
+          grep -n -E "RaiseTPL|RestoreTPL|TPL_" "$FILE"
