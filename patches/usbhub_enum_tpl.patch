@@ -1,6 +1,6 @@
 --- a/Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c
 +++ b/Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c
-@@ -1012,10 +1012,18 @@
+@@ -1012,6 +1012,7 @@
  UsbHubEnumeration (
    IN EFI_EVENT  Event,
    IN VOID       *Context
@@ -12,13 +12,40 @@
    UINT8          Bit;
    UINT8          Index;
    USB_DEVICE     *Child;
- 
-+  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
-+
+
    ASSERT (Context != NULL);
- 
+
++  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
    HubIf = (USB_INTERFACE *)Context;
-@@ -1048,6 +1056,9 @@
+
+   for (Index = 0; Index < HubIf->NumOfPort; Index++) {
+     Child = UsbFindChild (HubIf, Index);
+     if ((Child != NULL) && (Child->DisconnectFail == TRUE)) {
+       DEBUG ((DEBUG_INFO, "UsbEnumeratePort: The device disconnect fails at port %d from hub %p, try again\n", Index, HubIf));
+       UsbRemoveDevice (Child);
+     }
+   }
+
+   if (HubIf->ChangeMap == NULL) {
+     return;
+   }
+
+   //
+   // HUB starts its port index with 1.
+   //
+   Byte = 0;
+   Bit  = 1;
+
+   for (Index = 0; Index < HubIf->NumOfPort; Index++) {
+     if (USB_BIT_IS_SET (HubIf->ChangeMap[Byte], USB_BIT (Bit))) {
+       UsbEnumeratePort (HubIf, Index);
+     }
+
+     USB_NEXT_BIT (Byte, Bit);
+   }
+
+   UsbHubAckHubStatus (HubIf->Device);
+
    gBS->FreePool (HubIf->ChangeMap);
    HubIf->ChangeMap = NULL;
 +
