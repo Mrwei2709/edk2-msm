@@ -1,4 +1,4 @@
-name: Build judyln LG G710N
+name: Build Judyln UEFI
 on:
   push:
     branches: [ master ]
@@ -7,57 +7,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        device: [judyln]
     steps:
-      - name: 拉取源码+子模块
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: recursive
           fetch-depth: 0
 
-      - name: 安装编译依赖
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext patch
 
-      - name: 查找UsbBus.c路径并打印
+      - name: Apply USB HotPlug TPL fix patch
         run: |
-          find . -name "UsbBus.c"
-          USB_BUS_FILE=$(find . -path "*/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c" | head -n1)
-          echo "USB_BUS_FILE=$USB_BUS_FILE" >> $GITHUB_ENV
+          patch -p1 < usb-hotplug-tpl-fix.patch
 
-      - name: 生成TPL修复补丁
+      - name: Verify patch applied
         run: |
-          cat > tpl-fix.patch <<'EOF'
-@@ -XXXX,XXXX +XXXX,XXXX
--  OldTpl = RaiseTPL (TPL_CALLBACK);
--  // 这里是你原来临界区代码
--  RestoreTPL (OldTpl);
-+  {
-+    EFI_TPL         CurrTpl;
-+    CurrTpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);
-+    gBS->RestoreTPL (CurrTpl);
-+    if (CurrTpl < TPL_CALLBACK) {
-+      OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
-+    } else {
-+      OldTpl = CurrTpl;
-+    }
-+    // ========== 临界区业务代码保持原样放在这里 ==========
-+    if (OldTpl != CurrTpl) {
-+      gBS->RestoreTPL (OldTpl);
-+    }
-+  }
-EOF
-          echo "补丁生成完成"
+          grep -n "CurrTpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);" MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c || (echo "Patch apply failed!" && exit 1)
 
-      - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台 + USB_HOTPLUG）
+
+      - name: Build UEFI
         run: |
           ./build.sh --device judyln -r DEBUG -u -D USB_HOTPLUG=1
 
-      - name: 上传产物
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi
+          name: judyln-uefi-debug
           path: ./boot-judyln.img
