@@ -1,4 +1,4 @@
-name: Dump full UsbOnHubInterrupt
+name: Dump rest of UsbOnHubInterrupt
 on:
   workflow_dispatch:
 
@@ -12,9 +12,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Dump full UsbOnHubInterrupt
+      - name: Dump rest of UsbOnHubInterrupt
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbHub.c"
-          START=$(grep -n "UsbOnHubInterrupt (" "$FILE" | head -n1 | cut -d: -f1)
-          echo "=== starts at line $START ==="
-          sed -n "${START},+80p" "$FILE"
+          sed -n '466,560p' "$FILE"
