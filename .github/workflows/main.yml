@@ -1,4 +1,4 @@
-name: Find output boot image
+name: Find build output location
 on:
   workflow_dispatch:
 
@@ -29,11 +29,15 @@ jobs:
         run: |
           ./build.sh -d judyln -r DEBUG -u -D USB_HOTPLUG=1
 
-      - name: List all img files
+      - name: Inspect output
         run: |
-          echo "=== root dir ==="
-          ls -la
-          echo "=== find all .img ==="
-          find . -name "*.img" -type f
-          echo "=== find boot*.img ==="
-          find . -name "boot*.img" -type f
+          echo "=== top dirs ==="
+          ls -d */
+          echo "=== Build directory ==="
+          ls -la Build/ 2>/dev/null || echo "no Build dir at root"
+          echo "=== find all img/fd/efi ==="
+          find . -type f \( -name "*.img" -o -name "*.fd" -o -name "*.efi" \) | head -60
+          echo "=== find boot* files ==="
+          find . -name "boot*" -type f
+          echo "=== build.sh help ==="
+          ./build.sh -h 2>&1 | head -40
