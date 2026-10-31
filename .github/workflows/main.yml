@@ -1,9 +1,9 @@
-name: Dump rest of UsbOnHubInterrupt
+name: Fix 1: raise hub enum event to TPL_NOTIFY
 on:
   workflow_dispatch:
 
 jobs:
-  dump:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -12,7 +12,30 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Dump rest of UsbOnHubInterrupt
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
+
+      - name: Change hub enum event TPL to NOTIFY
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbHub.c"
-          sed -n '466,560p' "$FILE"
+          # 普通hub事件 662行
+          sed -i '662s/TPL_CALLBACK/TPL_NOTIFY/' "$FILE"
+          # 根hub定时器事件 977行
+          sed -i '977s/TPL_CALLBACK/TPL_NOTIFY/' "$FILE"
+
+      - name: Verify changes
+        run: |
+          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbHub.c"
+          grep -n "TPL_" "$FILE" | grep -E "662|977"
+
+      - name: Build UEFI
+        run: |
+          ./build.sh --device judyln -r DEBUG -u
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: G710N-judyln-tpl-notify-fix
+          path: ./boot-judyln.img
