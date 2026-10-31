@@ -1,0 +1,27 @@
+--- a/Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c
++++ b/Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c
+@@ -1012,10 +1012,18 @@
+ UsbHubEnumeration (
+   IN EFI_EVENT  Event,
+   IN VOID       *Context
+   )
+ {
++  EFI_TPL           OldTpl;
+   USB_INTERFACE  *HubIf;
+   UINT8          Byte;
+   UINT8          Bit;
+   UINT8          Index;
+   USB_DEVICE     *Child;
+ 
++  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
++
+   ASSERT (Context != NULL);
+ 
+   HubIf = (USB_INTERFACE *)Context;
+@@ -1048,6 +1056,9 @@
+   gBS->FreePool (HubIf->ChangeMap);
+   HubIf->ChangeMap = NULL;
++
++  gBS->RestoreTPL (OldTpl);
+   return;
+ }
