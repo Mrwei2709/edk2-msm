@@ -1,5 +1,5 @@
---- a/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
-+++ b/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
+--- a/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
++++ b/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
 @@ -1,5 +1,5 @@
  VOID UsbHotPlugCallback (IN EFI_EVENT Event, IN VOID *Context)
  {
