@@ -1,9 +1,9 @@
-name: Find build output location
+name: Build with boot img and find output
 on:
   workflow_dispatch:
 
 jobs:
-  find:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -25,19 +25,19 @@ jobs:
           sed -i '1036i\    gBS->RestoreTPL (OldTpl);' "$FILE"
           sed -i '1055a\  gBS->RestoreTPL (OldTpl);' "$FILE"
 
-      - name: Build UEFI
+      - name: Build UEFI with boot image
         run: |
-          ./build.sh -d judyln -r DEBUG -u -D USB_HOTPLUG=1
+          ./build.sh -d judyln -r DEBUG -u -b -D USB_HOTPLUG=1
 
-      - name: Inspect output
+      - name: Find output files
         run: |
-          echo "=== top dirs ==="
-          ls -d */
-          echo "=== Build directory ==="
-          ls -la Build/ 2>/dev/null || echo "no Build dir at root"
-          echo "=== find all img/fd/efi ==="
-          find . -type f \( -name "*.img" -o -name "*.fd" -o -name "*.efi" \) | head -60
-          echo "=== find boot* files ==="
-          find . -name "boot*" -type f
-          echo "=== build.sh help ==="
-          ./build.sh -h 2>&1 | head -40
+          echo "=== root files ==="
+          ls -la
+          echo "=== output dir ==="
+          ls -la output/ 2>/dev/null || echo "no output dir at root"
+          echo "=== workspace ==="
+          ls -la workspace/ 2>/dev/null || echo "no workspace dir"
+          echo "=== find all .img ==="
+          find . -name "*.img" -type f 2>/dev/null
+          echo "=== find judyln related ==="
+          find . -iname "*judyln*" -type f 2>/dev/null
