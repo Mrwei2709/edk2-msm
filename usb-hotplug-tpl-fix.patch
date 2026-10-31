@@ -1,10 +1,9 @@
 --- a/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
 +++ b/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
-@@ -1,5 +1,5 @@
+@@ -1,4 +1,14 @@
  VOID UsbHotPlugCallback (IN EFI_EVENT Event, IN VOID *Context)
  {
 -  USB_BUS         *Bus;
--
 -  Bus = Context;
 -  UsbHubEnumeration (Bus);
 +  EFI_TPL         OldTpl;
