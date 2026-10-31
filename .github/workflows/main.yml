@@ -22,28 +22,35 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 动态Patch UsbHotPlugCallback TPL断言修复
+      - name: 查找UsbBus.c路径并打印
         run: |
-          FILE="MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c"
-          cat > patch-tpl.sed <<'EOF'
-          /OldTpl = RaiseTPL (TPL_CALLBACK);/,/RestoreTPL (OldTpl);/c\
-          {\
-            EFI_TPL         CurrTpl;\
-            CurrTpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);\
-            gBS->RestoreTPL (CurrTpl);\
-            if (CurrTpl < TPL_CALLBACK) {\
-              OldTpl = gBS->RaiseTPL (TPL_CALLBACK);\
-            } else {\
-              OldTpl = CurrTpl;\
-            }\
-            // ========== 临界区业务代码 ==========\
-            if (OldTpl != CurrTpl) {\
-              gBS->RestoreTPL (OldTpl);\
-            }\
-          }
-          EOF
-          sed -f patch-tpl.sed -i "${FILE}"
-          rm patch-tpl.sed
+          find . -name "UsbBus.c"
+          USB_BUS_FILE=$(find . -path "*/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c" | head -n1)
+          echo "USB_BUS_FILE=$USB_BUS_FILE" >> $GITHUB_ENV
+
+      - name: 生成TPL修复补丁
+        run: |
+          cat > tpl-fix.patch <<'EOF'
+@@ -XXXX,XXXX +XXXX,XXXX
+-  OldTpl = RaiseTPL (TPL_CALLBACK);
+-  // 这里是你原来临界区代码
+-  RestoreTPL (OldTpl);
++  {
++    EFI_TPL         CurrTpl;
++    CurrTpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);
++    gBS->RestoreTPL (CurrTpl);
++    if (CurrTpl < TPL_CALLBACK) {
++      OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
++    } else {
++      OldTpl = CurrTpl;
++    }
++    // ========== 临界区业务代码保持原样放在这里 ==========
++    if (OldTpl != CurrTpl) {
++      gBS->RestoreTPL (OldTpl);
++    }
++  }
+EOF
+          echo "补丁生成完成"
 
       - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台 + USB_HOTPLUG）
         run: |
