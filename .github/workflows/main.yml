@@ -1,9 +1,9 @@
-name: Dump UsbEnumeratePort TPL usage
+name: Check USB config + root hub enum
 on:
   workflow_dispatch:
 
 jobs:
-  dump:
+  check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -12,12 +12,15 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Find and dump UsbEnumeratePort
+      - name: Check judyln dsc USB config
+        run: |
+          DSC="Platform/LG/sdm845/judyln.dsc"
+          echo "=== USB related defines ==="
+          grep -i -E "usb|hotplug|UsbBus" "$DSC"
+          echo "=== UsbBusDxe section ==="
+          grep -A10 "UsbBusDxe" "$DSC"
+
+      - name: Dump UsbRootHubEnumeration
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          grep -n "UsbEnumeratePort (" "$FILE"
-          echo "=== first 60 lines ==="
-          START=$(grep -n "UsbEnumeratePort (" "$FILE" | head -n1 | cut -d: -f1)
-          sed -n "${START},+60p" "$FILE"
-          echo "=== all TPL/RaiseTPL in UsbEnumer.c ==="
-          grep -n -E "RaiseTPL|RestoreTPL|TPL_" "$FILE"
+          grep -n -A40 "UsbRootHubEnumeration (" "$FILE"
