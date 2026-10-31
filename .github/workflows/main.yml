@@ -27,7 +27,6 @@ jobs:
         run: |
           grep -n "CurrTpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);" MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c || (echo "Patch apply failed!" && exit 1)
 
-
       - name: Build UEFI
         run: |
           ./build.sh --device judyln -r DEBUG -u -D USB_HOTPLUG=1
