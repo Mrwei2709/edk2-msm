@@ -1,4 +1,4 @@
-name: Locate dsc + dump root hub enum
+name: Dump full UsbEnumeratePort
 on:
   workflow_dispatch:
 
@@ -12,16 +12,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Find dsc and dump root hub
+      - name: Dump UsbEnumeratePort full function
         run: |
-          echo "=== find judyln dsc ==="
-          find . -name "judyln.dsc" -type f 2>/dev/null
-
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          HEADER="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.h"
-
-          echo "=== USB_BUS_TPL define ==="
-          grep -n "USB_BUS_TPL" "$HEADER"
-
-          echo "=== UsbRootHubEnumeration ==="
-          grep -n -A50 "UsbRootHubEnumeration (" "$FILE"
+          START=$(grep -n "UsbEnumeratePort (" "$FILE" | head -n1 | cut -d: -f1)
+          echo "=== function starts at line $START ==="
+          sed -n "${START},+120p" "$FILE"
