@@ -1,0 +1,44 @@
+name: Build Judyln UEFI
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
+
+      - name: Patch UsbHotPlugCallback
+        run: |
+          perl -0777 -pi -e '
+            open my $fh, "<", "patches/usbhc_fix.txt" or die;
+            local $/;
+            my $repl = <$fh>;
+            close $fh;
+            s/VOID UsbHotPlugCallback \(IN EFI_EVENT Event, IN VOID \*Context\)\s*\{.*?\}/$repl/s;
+          ' edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
+
+      - name: Verify modification
+        run: |
+          grep "UsbHotPlugDeferredEnumerate" edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c || (echo "Replacement failed!" && exit 1)
+
+      - name: Build UEFI
+        run: |
+          ./build.sh --device judyln -r DEBUG -u -D USB_HOTPLUG=1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: judyln-uefi-debug
+          path: ./boot-judyln.img
