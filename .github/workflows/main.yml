@@ -1,11 +1,9 @@
-name: Build Judyln UEFI
+name: Locate UsbHotPlugCallback
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  locate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -14,31 +12,10 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install dependencies
+      - name: Locate UsbHotPlugCallback function
         run: |
-          sudo apt update
-          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
-
-      - name: Patch UsbHotPlugCallback
-        run: |
-          perl -0777 -pi -e '
-            open my $fh, "<", "patches/usbhc_fix.txt" or die "open patch file failed: $!";
-            local $/;
-            my $repl = <$fh>;
-            close $fh;
-            s/VOID UsbHotPlugCallback \(IN EFI_EVENT Event, IN VOID \*Context\)\s*\{.*?\}/$repl/s;
-          ' Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c
-
-      - name: Verify modification
-        run: |
-          grep "UsbHotPlugDeferredEnumerate" Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c || (echo "Replacement failed!" && exit 1)
-
-      - name: Build UEFI
-        run: |
-          ./build.sh -d judyln -r DEBUG -u -D USB_HOTPLUG=1
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: judyln-uefi-debug
-          path: ./boot-judyln.img
+          SRC="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c"
+          echo "=== file exists? ==="
+          ls -la "$SRC" || echo "FILE NOT FOUND at this path"
+          echo "=== grep UsbHotPlugCallback ==="
+          grep -n -A15 "UsbHotPlugCallback" "$SRC"
