@@ -1,4 +1,4 @@
-name: Dump UsbEnumerateNewDev function
+name: Dump full UsbOnHubInterrupt
 on:
   workflow_dispatch:
 
@@ -12,9 +12,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Dump UsbEnumerateNewDev
+      - name: Dump full UsbOnHubInterrupt
         run: |
-          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          START=$(grep -n "UsbEnumerateNewDev (" "$FILE" | head -n1 | cut -d: -f1)
+          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbHub.c"
+          START=$(grep -n "UsbOnHubInterrupt (" "$FILE" | head -n1 | cut -d: -f1)
           echo "=== starts at line $START ==="
-          sed -n "${START},+120p" "$FILE"
+          sed -n "${START},+80p" "$FILE"
