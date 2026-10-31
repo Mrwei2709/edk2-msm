@@ -1,0 +1,40 @@
+STATIC EFI_EVENT mUsbHotPlugDeferEvent = NULL;
+
+VOID EFIAPI
+UsbHotPlugDeferredEnumerate (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
+  )
+{
+  USB_BUS *Bus = Context;
+  if (Bus->Controller != NULL)
+  {
+    UsbHubEnumeration (Bus);
+  }
+}
+
+VOID
+UsbHotPlugCallback (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
+  )
+{
+  EFI_STATUS Status;
+  USB_BUS *Bus = Context;
+
+  if (mUsbHotPlugDeferEvent == NULL)
+  {
+    Status = gBS->CreateEvent (
+                    EVT_NOTIFY_SIGNAL,
+                    TPL_CALLBACK,
+                    UsbHotPlugDeferredEnumerate,
+                    Bus,
+                    &mUsbHotPlugDeferEvent
+                    );
+    if (EFI_ERROR (Status))
+    {
+      return;
+    }
+  }
+  gBS->SignalEvent (mUsbHotPlugDeferEvent);
+}
