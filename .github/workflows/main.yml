@@ -1,9 +1,9 @@
-name: Build Judyln UEFI with TPL fix
+name: Find output boot image
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  find:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -25,18 +25,15 @@ jobs:
           sed -i '1036i\    gBS->RestoreTPL (OldTpl);' "$FILE"
           sed -i '1055a\  gBS->RestoreTPL (OldTpl);' "$FILE"
 
-      - name: Verify patch
-        run: |
-          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          grep -c "OldTpl" "$FILE"
-          grep -c "RestoreTPL (OldTpl)" "$FILE"
-
       - name: Build UEFI
         run: |
           ./build.sh -d judyln -r DEBUG -u -D USB_HOTPLUG=1
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: judyln-uefi-debug-tplfix
-          path: ./boot-judyln.img
+      - name: List all img files
+        run: |
+          echo "=== root dir ==="
+          ls -la
+          echo "=== find all .img ==="
+          find . -name "*.img" -type f
+          echo "=== find boot*.img ==="
+          find . -name "boot*.img" -type f
