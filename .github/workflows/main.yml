@@ -19,16 +19,16 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
-      - name: 修补USB Hub枚举事件TPL优先级
+      - name: 降级USB枚举事件到TPL_APPLICATION
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbHub.c"
-          sed -i '662s/TPL_CALLBACK/TPL_NOTIFY/' "$FILE"
-          sed -i '977s/TPL_CALLBACK/TPL_NOTIFY/' "$FILE"
+          sed -i '662s/TPL_CALLBACK/TPL_APPLICATION/' "$FILE"
+          sed -i '977s/TPL_CALLBACK/TPL_APPLICATION/' "$FILE"
       - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
         run: |
           ./build.sh --device judyln -r DEBUG -u
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi-tpl-notify-fix
+          name: G710N-judyln-uefi-tpl-app-fix
           path: ./boot-judyln.img
