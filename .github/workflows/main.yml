@@ -1,9 +1,9 @@
-name: Locate Usb Hotplug Code
+name: Inspect UsbBusDxe
 on:
   workflow_dispatch:
 
 jobs:
-  locate:
+  inspect:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -12,12 +12,14 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Search hotplug related symbols in UsbBus.c
+      - name: Inspect UsbBusDxe directory and symbols
         run: |
-          SRC="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c"
-          echo "=== grep -i hotplug ==="
-          grep -n -i "hotplug" "$SRC" || echo "(no hotplug)"
-          echo "=== grep UsbHubEnumeration ==="
-          grep -n "UsbHubEnumeration" "$SRC" || echo "(no UsbHubEnumeration)"
-          echo "=== grep Timer/CreateEvent ==="
-          grep -n -E "Timer|CreateEvent|TPL_CALLBACK" "$SRC" || echo "(none)"
+          DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
+          echo "=== dir listing ==="
+          ls -la "$DIR"
+          echo "=== UsbHubEnumeration in UsbHub.c ==="
+          grep -n "UsbHubEnumeration" "$DIR/UsbHub.c" || echo "(not in UsbHub.c)"
+          echo "=== timer/hotplug related in whole dir ==="
+          grep -rn -i -E "hotplug|UsbBusTimer|TimerHandler|CreateEvent" "$DIR" || echo "(none)"
+          echo "=== edk2 submodule commit ==="
+          cd Common/edk2 && git log -1 --format="%H %s" 2>/dev/null || echo "(no git info)"
