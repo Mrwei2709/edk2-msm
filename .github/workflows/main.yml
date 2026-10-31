@@ -15,25 +15,18 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 0
+      - name: 检查USB文件路径
+        run: |
+          ls -la Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/
       - name: 安装编译依赖
         run: |
           sudo apt update
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
-      - name: 恢复TPL_CALLBACK + 根Hub定时器延迟500ms启动
-        run: |
-          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbHub.c"
-          # 恢复两个事件为原生 TPL_CALLBACK
-          sed -i '662s/TPL_NOTIFY/TPL_CALLBACK/' "$FILE"
-          sed -i '662s/TPL_APPLICATION/TPL_CALLBACK/' "$FILE"
-          sed -i '977s/TPL_NOTIFY/TPL_CALLBACK/' "$FILE"
-          sed -i '977s/TPL_APPLICATION/TPL_CALLBACK/' "$FILE"
-          # 根Hub定时器：SetTimer 改成 500ms 延迟启动，而不是立即触发
-          sed -i 's/Status = gBS->SetTimer (HubIf->HubNotify, TimerPeriodic, 10000000);/Status = gBS->SetTimer (HubIf->HubNotify, TimerRelative, 500000000);/' "$FILE"
       - name: 编译 G710N judyln UEFI（DEBUG + USB键盘 + USB串口控制台）
         run: |
           ./build.sh --device judyln -r DEBUG -u
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: G710N-judyln-uefi-usb-delay-fix
+          name: G710N-judyln-uefi
           path: ./boot-judyln.img
