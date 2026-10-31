@@ -1,4 +1,4 @@
-name: Dump UsbHubEnumeration func start
+name: Locate UsbHubEnumeration definition
 on:
   workflow_dispatch:
 
@@ -12,7 +12,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Find UsbHubEnumeration and print first 40 lines
+      - name: Find function definition
         run: |
           DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
-          grep -n -A40 "UsbHubEnumeration" "$DIR/UsbHub.c"
+          grep -n "^VOID EFIAPI UsbHubEnumeration" "$DIR/UsbHub.c" -A50
