@@ -1,4 +1,4 @@
-name: Fix early return TPL leak
+name: Fix early return TPL leak v2
 on:
   workflow_dispatch:
 
@@ -12,13 +12,12 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: RestoreTPL before early return
+      - name: Insert RestoreTPL before early return line 1036
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          sed -i 's/^    return;$/    gBS->RestoreTPL (OldTpl); return;/' "$FILE"
+          sed -i '1036i\    gBS->RestoreTPL (OldTpl);' "$FILE"
 
-      - name: Verify
+      - name: Show this block
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          grep -n -A2 "ChangeMap == NULL" "$FILE"
-          grep -n "RestoreTPL (OldTpl)" "$FILE"
+          sed -n '1030,1040p' "$FILE"
