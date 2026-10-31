@@ -1,4 +1,4 @@
-name: Locate UsbHotPlugCallback
+name: Locate Usb Hotplug Code
 on:
   workflow_dispatch:
 
@@ -12,10 +12,12 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Locate UsbHotPlugCallback function
+      - name: Search hotplug related symbols in UsbBus.c
         run: |
           SRC="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBus.c"
-          echo "=== file exists? ==="
-          ls -la "$SRC" || echo "FILE NOT FOUND at this path"
-          echo "=== grep UsbHotPlugCallback ==="
-          grep -n -A15 "UsbHotPlugCallback" "$SRC"
+          echo "=== grep -i hotplug ==="
+          grep -n -i "hotplug" "$SRC" || echo "(no hotplug)"
+          echo "=== grep UsbHubEnumeration ==="
+          grep -n "UsbHubEnumeration" "$SRC" || echo "(no UsbHubEnumeration)"
+          echo "=== grep Timer/CreateEvent ==="
+          grep -n -E "Timer|CreateEvent|TPL_CALLBACK" "$SRC" || echo "(none)"
