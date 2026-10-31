@@ -1,4 +1,4 @@
-name: Dump hub interrupt + root hub event create
+name: Dump UsbEnumerateNewDev function
 on:
   workflow_dispatch:
 
@@ -12,12 +12,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Dump UsbOnHubInterrupt + root hub event
+      - name: Dump UsbEnumerateNewDev
         run: |
-          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbHub.c"
-
-          echo "=== UsbOnHubInterrupt ==="
-          grep -n -A40 "UsbOnHubInterrupt (" "$FILE"
-
-          echo "=== root hub CreateEvent ==="
-          grep -n -B2 -A8 "CreateEvent" "$FILE"
+          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
+          START=$(grep -n "UsbEnumerateNewDev (" "$FILE" | head -n1 | cut -d: -f1)
+          echo "=== starts at line $START ==="
+          sed -n "${START},+120p" "$FILE"
