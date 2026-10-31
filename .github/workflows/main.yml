@@ -1,4 +1,4 @@
-name: Find UsbHubEnumeration func
+name: Find UsbHubEnumeration in dir
 on:
   workflow_dispatch:
 
@@ -12,7 +12,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Search UsbHubEnumeration(
+      - name: Search UsbHubEnumeration across UsbBusDxe
         run: |
           DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
-          grep -n "UsbHubEnumeration(" "$DIR/UsbHub.c"
+          grep -rn "UsbHubEnumeration" "$DIR"/*.c "$DIR"/*.h
