@@ -1,9 +1,9 @@
-name: Fix early return TPL leak v2
+name: Build Judyln UEFI with TPL fix
 on:
   workflow_dispatch:
 
 jobs:
-  fix:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -12,12 +12,31 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Insert RestoreTPL before early return line 1036
+      - name: Install dependencies
         run: |
-          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          sed -i '1036i\    gBS->RestoreTPL (OldTpl);' "$FILE"
+          sudo apt update
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: Show this block
+      - name: Patch UsbHubEnumeration TPL wrap
         run: |
           FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
-          sed -n '1030,1040p' "$FILE"
+          sed -i '1016a\  EFI_TPL           OldTpl;' "$FILE"
+          sed -i '1022a\  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);' "$FILE"
+          sed -i '1036i\    gBS->RestoreTPL (OldTpl);' "$FILE"
+          sed -i '1055a\  gBS->RestoreTPL (OldTpl);' "$FILE"
+
+      - name: Verify patch
+        run: |
+          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
+          grep -c "OldTpl" "$FILE"
+          grep -c "RestoreTPL (OldTpl)" "$FILE"
+
+      - name: Build UEFI
+        run: |
+          ./build.sh -d judyln -r DEBUG -u -D USB_HOTPLUG=1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: judyln-uefi-debug-tplfix
+          path: ./boot-judyln.img
