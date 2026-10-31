@@ -15,4 +15,8 @@ jobs:
       - name: Find function definition
         run: |
           DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
-          grep -n "^VOID EFIAPI UsbHubEnumeration" "$DIR/UsbHub.c" -A50
+          grep -n "UsbHubEnumeration" "$DIR/UsbHub.c"
+          echo "=== full definition ==="
+          grep -n "UsbHubEnumeration" "$DIR/UsbHub.c" | grep -v "CreateEvent"
+          echo "=== print first 60 lines after function name ==="
+          sed -n "$(grep -n 'UsbHubEnumeration (' "$DIR/UsbHub.c" | grep -v 'gBS->\|UsbIo->\|UsbHubInit' | head -n1 | cut -d: -f1),+60p" "$DIR/UsbHub.c"
