@@ -1,9 +1,9 @@
-name: Test apply TPL patch
+name: Inject TPL wrap by sed
 on:
   workflow_dispatch:
 
 jobs:
-  test:
+  modify:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -12,6 +12,17 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Apply patch
+      - name: Insert OldTpl declaration and RaiseTPL
         run: |
-          patch -p1 --dry-run < patches/usbhub_enum_tpl.patch
+          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
+          # 在 { 下一行插入 EFI_TPL OldTpl;
+          sed -i '1016a\  EFI_TPL           OldTpl;' "$FILE"
+          # 在 ASSERT(Context!=NULL); 之后插入 RaiseTPL
+          sed -i '1022a\  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);' "$FILE"
+          # 在 return; 之前插入 RestoreTPL
+          sed -i '1055a\  gBS->RestoreTPL (OldTpl);' "$FILE"
+
+      - name: Show modified snippet
+        run: |
+          FILE="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe/UsbEnumer.c"
+          sed -n '1012,1060p' "$FILE"
