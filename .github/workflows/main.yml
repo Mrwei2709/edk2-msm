@@ -1,4 +1,4 @@
-name: Find UsbHubEnumeration in dir
+name: Dump UsbHubEnumeration body
 on:
   workflow_dispatch:
 
@@ -12,7 +12,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Search UsbHubEnumeration across UsbBusDxe
+      - name: Extract UsbHubEnumeration
         run: |
           DIR="Common/edk2/MdeModulePkg/Bus/Usb/UsbBusDxe"
-          grep -rn "UsbHubEnumeration" "$DIR"/*.c "$DIR"/*.h
+          sed -n '1012,1072p' "$DIR/UsbEnumer.c"
