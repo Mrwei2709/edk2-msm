@@ -23,12 +23,12 @@ jobs:
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
             device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 【源码阉割】sed 删除 Android Linux PE 加载器源码行
+      - name: 【源码阉割】sed 删除 Android Linux PE 加载模块
         run: |
-          cp Packages/SimpleInit/SimpleInit.inf Packages/SimpleInit/SimpleInit.inf.bak
-          sed -i '/AndroidLoader\.c/d' Packages/SimpleInit/SimpleInit.inf
-          sed -i '/LinuxLoader\.c/d' Packages/SimpleInit/SimpleInit.inf
-          sed -i '/PeLoader\.c/d' Packages/SimpleInit/SimpleInit.inf
+          cp GPLDrivers/Library/SimpleInit/SimpleInitMain.inf GPLDrivers/Library/SimpleInit/SimpleInitMain.inf.bak
+          sed -i '/AndroidLoader\.c/d' GPLDrivers/Library/SimpleInit/SimpleInitMain.inf
+          sed -i '/LinuxLoader\.c/d' GPLDrivers/Library/SimpleInit/SimpleInitMain.inf
+          sed -i '/PeLoader\.c/d' GPLDrivers/Library/SimpleInit/SimpleInitMain.inf
 
       - name: 配置simpleinit自动直接启动Windows
         run: |
