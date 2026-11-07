@@ -1,4 +1,4 @@
-name: Build judyln LG G710N UEFI (Trimmed, Only Windows EFI Boot)
+name: Build judyln LG G710N UEFI (Only Windows boot, native config)
 on:
   push:
     branches: [ master ]
@@ -23,25 +23,20 @@ jobs:
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
             device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 【源码阉割】sed 删除 Android Linux PE 加载模块
+      - name: 生成精简simpleinit配置，只保留Windows引导
         run: |
-          cp GPLDrivers/Library/SimpleInit/SimpleInitMain.inf GPLDrivers/Library/SimpleInit/SimpleInitMain.inf.bak
-          sed -i '/AndroidLoader\.c/d' GPLDrivers/Library/SimpleInit/SimpleInitMain.inf
-          sed -i '/LinuxLoader\.c/d' GPLDrivers/Library/SimpleInit/SimpleInitMain.inf
-          sed -i '/PeLoader\.c/d' GPLDrivers/Library/SimpleInit/SimpleInitMain.inf
+          cat > simpleinit.static.uefi.cfg <<'EOF'
+[global]
+auto_boot = true
+timeout = 0
 
-      - name: 配置simpleinit自动直接启动Windows
-        run: |
-          echo '[global]' > simpleinit.static.uefi.cfg
-          echo 'auto_boot = true' >> simpleinit.static.uefi.cfg
-          echo 'timeout = 0' >> simpleinit.static.uefi.cfg
-          echo '' >> simpleinit.static.uefi.cfg
-          echo '[windows]' >> simpleinit.static.uefi.cfg
-          echo 'mode = "efi"' >> simpleinit.static.uefi.cfg
-          echo 'enabled = true' >> simpleinit.static.uefi.cfg
-          echo 'desc = "Windows"' >> simpleinit.static.uefi.cfg
-          echo 'show = false' >> simpleinit.static.uefi.cfg
-          echo 'efi_file = "\\EFI\\Boot\\bootaa64.efi"' >> simpleinit.static.uefi.cfg
+[windows]
+mode = "efi"
+enabled = true
+desc = "Windows ARM"
+show = false
+efi_file = "\\EFI\\Boot\\bootaa64.efi"
+EOF
 
       - name: Build UEFI judyln RELEASE
         run: |
@@ -51,6 +46,6 @@ jobs:
       - name: Upload boot-judyln.img
         uses: actions/upload-artifact@v4
         with:
-          name: judyln-uefi-trim-winonly
+          name: judyln-uefi-winonly
           path: boot-judyln.img
           retention-days: 14
