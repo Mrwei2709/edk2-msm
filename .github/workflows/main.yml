@@ -23,36 +23,13 @@ jobs:
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
             device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 【源码阉割】修改simpleinit.inf，移除Android Linux PE加载模块
+      - name: 【源码阉割】sed 删除 Android Linux PE 加载器源码行
         run: |
           cp simpleinit/simpleinit.inf simpleinit/simpleinit.inf.bak
-          cat > simpleinit/simpleinit.inf <<'EOF'
-[Defines]
-  INF_VERSION                    = 0x00010005
-  BASE_NAME                      = SimpleInit
-  FILE_GUID                      = 42F79E94-006D-4F45-B414-78B83773769D
-  MODULE_TYPE                    = UEFI_APPLICATION
-  VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = UefiMain
-
-[Sources]
-  SimpleInit.c
-  Config.c
-  Menu.c
-  EfiLoader.c
-
-[Packages]
-  MdePkg/MdePkg.dec
-  MdeModulePkg/MdeModulePkg.dec
-
-[LibraryClasses]
-  UefiApplicationEntryPoint
-  UefiLib
-  BaseLib
-  BaseMemoryLib
-  PrintLib
-  PcdLib
-EOF
+          # 删除 AndroidLoader.c / LinuxLoader.c / PeLoader.c 相关行
+          sed -i '/AndroidLoader\.c/d' simpleinit/simpleinit.inf
+          sed -i '/LinuxLoader\.c/d' simpleinit/simpleinit.inf
+          sed -i '/PeLoader\.c/d' simpleinit/simpleinit.inf
 
       - name: 配置simpleinit自动直接启动Windows
         run: |
