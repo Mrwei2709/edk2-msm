@@ -25,18 +25,16 @@ jobs:
 
       - name: 生成精简simpleinit配置，只保留Windows引导
         run: |
-          cat > simpleinit.static.uefi.cfg <<'EOF'
-[global]
-auto_boot = true
-timeout = 0
-
-[windows]
-mode = "efi"
-enabled = true
-desc = "Windows ARM"
-show = false
-efi_file = "\\EFI\\Boot\\bootaa64.efi"
-EOF
+          echo '[global]' > simpleinit.static.uefi.cfg
+          echo 'auto_boot = true' >> simpleinit.static.uefi.cfg
+          echo 'timeout = 0' >> simpleinit.static.uefi.cfg
+          echo '' >> simpleinit.static.uefi.cfg
+          echo '[windows]' >> simpleinit.static.uefi.cfg
+          echo 'mode = "efi"' >> simpleinit.static.uefi.cfg
+          echo 'enabled = true' >> simpleinit.static.uefi.cfg
+          echo 'desc = "Windows ARM"' >> simpleinit.static.uefi.cfg
+          echo 'show = false' >> simpleinit.static.uefi.cfg
+          echo 'efi_file = "\\EFI\\Boot\\bootaa64.efi"' >> simpleinit.static.uefi.cfg
 
       - name: Build UEFI judyln RELEASE
         run: |
