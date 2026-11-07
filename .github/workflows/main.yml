@@ -39,11 +39,11 @@ jobs:
       - name: Build UEFI judyln RELEASE
         run: |
           ./build.sh --device judyln -r RELEASE
+          ls -la boot-judyln.img
 
       - name: Upload boot-judyln.img
         uses: actions/upload-artifact@v4
         with:
           name: judyln-uefi-winonly-release
-          path: |
-            Build/judyln/RELEASE/boot-judyln.img
+          path: boot-judyln.img
           retention-days: 14
