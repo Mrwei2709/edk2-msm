@@ -33,7 +33,7 @@ jobs:
 
           for f in $files; do
             cp "$f" "$f.bak"
-            sed -i -E 's|^([[:space:]]*)(.*(SimpleInitMain|Library/SimpleInit).*)|\1# \2|' "$f"
+            sed -i -E 's@^([[:space:]]*)(.*(SimpleInitMain|Library/SimpleInit).*)@\1# \2@' "$f"
           done
 
           echo "===== 修改后 ====="
