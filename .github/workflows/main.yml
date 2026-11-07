@@ -25,11 +25,10 @@ jobs:
 
       - name: 【源码阉割】sed 删除 Android Linux PE 加载器源码行
         run: |
-          cp simpleinit/simpleinit.inf simpleinit/simpleinit.inf.bak
-          # 删除 AndroidLoader.c / LinuxLoader.c / PeLoader.c 相关行
-          sed -i '/AndroidLoader\.c/d' simpleinit/simpleinit.inf
-          sed -i '/LinuxLoader\.c/d' simpleinit/simpleinit.inf
-          sed -i '/PeLoader\.c/d' simpleinit/simpleinit.inf
+          cp Packages/SimpleInit/SimpleInit.inf Packages/SimpleInit/SimpleInit.inf.bak
+          sed -i '/AndroidLoader\.c/d' Packages/SimpleInit/SimpleInit.inf
+          sed -i '/LinuxLoader\.c/d' Packages/SimpleInit/SimpleInit.inf
+          sed -i '/PeLoader\.c/d' Packages/SimpleInit/SimpleInit.inf
 
       - name: 配置simpleinit自动直接启动Windows
         run: |
