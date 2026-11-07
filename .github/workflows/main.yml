@@ -1,4 +1,4 @@
-name: Build judyln LG G710N UEFI (Only Windows boot, native config)
+name: Build judyln LG G710N UEFI (Windows Only, SimpleInit Removed)
 on:
   push:
     branches: [ master ]
@@ -23,27 +23,33 @@ jobs:
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
             device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 生成精简simpleinit配置，只保留Windows引导
+      - name: 阉割 SimpleInit（从固件打包列表彻底移除）
         run: |
-          echo '[global]' > simpleinit.static.uefi.cfg
-          echo 'auto_boot = true' >> simpleinit.static.uefi.cfg
-          echo 'timeout = 0' >> simpleinit.static.uefi.cfg
-          echo '' >> simpleinit.static.uefi.cfg
-          echo '[windows]' >> simpleinit.static.uefi.cfg
-          echo 'mode = "efi"' >> simpleinit.static.uefi.cfg
-          echo 'enabled = true' >> simpleinit.static.uefi.cfg
-          echo 'desc = "Windows ARM"' >> simpleinit.static.uefi.cfg
-          echo 'show = false' >> simpleinit.static.uefi.cfg
-          echo 'efi_file = "\\EFI\\Boot\\bootaa64.efi"' >> simpleinit.static.uefi.cfg
+          echo "===== 命中文件 ====="
+          grep -rIlE "SimpleInitMain|Library/SimpleInit" --include=*.dsc --include=*.fdf --include=*.inc Platform Silicon || echo "(无命中)"
+
+          files=$(grep -rIlE "SimpleInitMain|Library/SimpleInit" --include=*.dsc --include=*.fdf --include=*.inc Platform Silicon || true)
+          if [ -z "$files" ]; then echo "未找到 SimpleInit 注册行"; exit 1; fi
+
+          for f in $files; do
+            cp "$f" "$f.bak"
+            sed -i -E 's|^([[:space:]]*)(.*(SimpleInitMain|Library/SimpleInit).*)|\1# \2|' "$f"
+          done
+
+          echo "===== 修改后 ====="
+          grep -rnE "(SimpleInitMain|Library/SimpleInit)" --include=*.dsc --include=*.fdf --include=*.inc Platform Silicon || echo "已全部注释，SimpleInit 不再进固件"
 
       - name: Build UEFI judyln RELEASE
         run: |
           ./build.sh --device judyln -r RELEASE
-          ls -la boot-judyln.img
+          mkdir -p out
+          find . -name "boot-judyln.img" -not -path "*/Common/*" -exec cp {} out/ \;
+          ls -la out/
 
-      - name: Upload boot-judyln.img
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: judyln-uefi-winonly
-          path: boot-judyln.img
+          path: out/boot-judyln.img
+          if-no-files-found: error
           retention-days: 14
