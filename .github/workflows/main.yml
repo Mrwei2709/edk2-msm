@@ -1,4 +1,4 @@
-name: Build judyln LG G710N UEFI (Only Windows Boot)
+name: Build judyln LG G710N UEFI (Trimmed, Only Windows EFI Boot)
 on:
   push:
     branches: [ master ]
@@ -23,7 +23,38 @@ jobs:
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
             device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: 替换simpleinit配置，只保留Windows引导、跳过菜单
+      - name: 【源码阉割】修改simpleinit.inf，移除Android Linux PE加载模块
+        run: |
+          cp simpleinit/simpleinit.inf simpleinit/simpleinit.inf.bak
+          cat > simpleinit/simpleinit.inf <<'EOF'
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInit
+  FILE_GUID                      = 42F79E94-006D-4F45-B414-78B83773769D
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UefiMain
+
+[Sources]
+  SimpleInit.c
+  Config.c
+  Menu.c
+  EfiLoader.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+  BaseLib
+  BaseMemoryLib
+  PrintLib
+  PcdLib
+EOF
+
+      - name: 配置simpleinit自动直接启动Windows
         run: |
           echo '[global]' > simpleinit.static.uefi.cfg
           echo 'auto_boot = true' >> simpleinit.static.uefi.cfg
@@ -44,6 +75,6 @@ jobs:
       - name: Upload boot-judyln.img
         uses: actions/upload-artifact@v4
         with:
-          name: judyln-uefi-winonly-release
+          name: judyln-uefi-trim-winonly
           path: boot-judyln.img
           retention-days: 14
