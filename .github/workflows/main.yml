@@ -23,13 +23,26 @@ jobs:
           sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
             device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: Build UEFI (judyln, Windows only, Release)
+      - name: 替换simpleinit配置，只保留Windows引导、跳过菜单
         run: |
-          # 关键参数说明
-          # --no-android 关闭Android引导；--no-linux 关闭Linux引导；--no-simpleinit-menu 屏蔽启动选择菜单
-          ./build.sh --device judyln -r RELEASE --no-android --no-linux --no-simpleinit-menu
+          cat > simpleinit.static.uefi.cfg <<'EOF'
+[global]
+auto_boot = true
+timeout = 0
 
-      - name: Upload compiled boot.img artifact
+[windows]
+mode = "efi"
+enabled = true
+desc = "Windows"
+show = false
+efi_file = "\EFI\Boot\bootaa64.efi"
+EOF
+
+      - name: Build UEFI judyln RELEASE
+        run: |
+          ./build.sh --device judyln -r RELEASE
+
+      - name: Upload boot-judyln.img
         uses: actions/upload-artifact@v4
         with:
           name: judyln-uefi-winonly-release
