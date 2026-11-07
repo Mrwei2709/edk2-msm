@@ -1,55 +1,38 @@
-# This is a basic workflow to help you get started with Actions
-
-name: msm-Build
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+name: Build judyln LG G710N UEFI (Only Windows Boot)
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches: [ master ]
+  workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    name: Image Build
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     strategy:
-      max-parallel: 8
       matrix:
-        device:
-          # sm8150
-          - dipper
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+        device: [judyln]
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout source & submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
 
-      - name: Install required packages
+      - name: Install build dependencies
         run: |
-          sudo dpkg --add-architecture i386
-          sudo install -d -m 0755 /etc/apt/keyrings
-          sudo wget -O /etc/apt/keyrings/winehq-archive.key \
-            https://dl.winehq.org/wine-builds/winehq.key
-          sudo chmod 644 /etc/apt/keyrings/winehq-archive.key
-          sudo wget -O /etc/apt/sources.list.d/winehq-noble.sources \
-            https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
-          sudo apt-get update
-          sudo apt-get install --install-recommends winehq-stable libsdl2-2.0-0 libsdl2-dev  build-essential uuid-dev clang llvm iasl nasm gcc-aarch64-linux-gnu abootimg python3-pil python3-git gettext libgcc-s1:i386 libstdc++6:i386  -y
+          sudo apt update
+          sudo apt install -y build-essential python3 python3-setuptools gcc-aarch64-linux-gnu clang llvm \
+            device-tree-compiler uuid-dev nasm acpica-tools libglib2.0-dev gettext
 
-      - name: Build an image for ${{ matrix.device }}
+      - name: Build UEFI (judyln, Windows only, Release)
         run: |
-          ./build.sh --device ${{ matrix.device }}
+          # 关键参数说明
+          # --no-android 关闭Android引导；--no-linux 关闭Linux引导；--no-simpleinit-menu 屏蔽启动选择菜单
+          ./build.sh --device judyln -r RELEASE --no-android --no-linux --no-simpleinit-menu
 
-      - name: Upload a Build Artifact
+      - name: Upload compiled boot.img artifact
         uses: actions/upload-artifact@v4
-        with: # Artifact name
-          name: ${{ matrix.device }}
-          # A file, directory or wildcard pattern that describes what to upload
-          path: ./*.img
+        with:
+          name: judyln-uefi-winonly-release
+          path: |
+            Build/judyln/RELEASE/boot-judyln.img
+          retention-days: 14
